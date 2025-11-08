@@ -6,6 +6,7 @@ import com.enterprisex.wallsofwonder.auth.DTO.Requests.UserLoginRequest;
 import com.enterprisex.wallsofwonder.auth.DTO.Requests.UserRegisterRequest;
 import com.enterprisex.wallsofwonder.auth.DTO.UserDTO;
 import com.enterprisex.wallsofwonder.auth.Enums.SignupType;
+import com.enterprisex.wallsofwonder.auth.ServiceImpl.UserDetail;
 
 import java.util.List;
 
@@ -17,6 +18,5 @@ public interface UserService {
     UserDTO userProfile();
     void adminRegister(UserRegisterRequest request, SignupType signupType);
     List<UserDTO> getAllUsers();
-
-
+    UserDetail validateToken();
 }

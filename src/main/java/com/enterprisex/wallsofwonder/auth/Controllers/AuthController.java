@@ -5,16 +5,14 @@ import com.enterprisex.wallsofwonder.auth.DTO.Requests.UserRegisterRequest;
 import com.enterprisex.wallsofwonder.auth.DTO.Response.ResponseHandler;
 import com.enterprisex.wallsofwonder.auth.DTO.UserDTO;
 import com.enterprisex.wallsofwonder.auth.Enums.SignupType;
+import com.enterprisex.wallsofwonder.auth.ServiceImpl.UserDetail;
 import com.enterprisex.wallsofwonder.auth.Services.OTPService;
 import com.enterprisex.wallsofwonder.auth.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -117,6 +115,29 @@ public class AuthController {
         return new ResponseEntity<>(responseHandler, HttpStatus.OK);
     }
 
+    @GetMapping("auth/validate")
+    public ResponseEntity<?> validateToken() {
+        ResponseHandler responseHandler = new ResponseHandler();
+        try {
+            UserDetail response = userService.validateToken();
+           if(response!=null){
+               responseHandler.setIsSuccess(true);
+               responseHandler.setMessage("Token Validated");
+               responseHandler.setData(response);
+           }else {
+               responseHandler.setIsSuccess(false);
+               responseHandler.setMessage("Token is Invalid or Expire ");
+           }
+
+            return new ResponseEntity<>(responseHandler, HttpStatus.OK);
+
+        }catch (Exception e){
+            e.printStackTrace();
+            responseHandler.setIsSuccess(false);
+            responseHandler.setMessage(e.getMessage());
+        }
+        return new ResponseEntity<>(responseHandler, HttpStatus.OK);
+    }
     @GetMapping("admin/get/allUsers")
     public ResponseEntity<?> getAllUsers() {
 

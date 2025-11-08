@@ -58,7 +58,6 @@ public class UserServiceImpl implements UserService {
     private ModelMapper modelMapper;
 
 
-
     @Autowired
     private LoginSessionRepository loginSessionRepository;
 
@@ -70,8 +69,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public void userRegister(UserRegisterRequest request, SignupType signType, String otp) {
 
-        UserEntity userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(),Role.USER.name());
-        if(userEntity==null){
+        UserEntity userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.USER.name());
+        if (userEntity == null) {
             request.setRole(Role.USER);
             String encodedPassword = passwordEncoder.encode(request.getPassword());
             request.setPassword(encodedPassword);
@@ -81,7 +80,7 @@ public class UserServiceImpl implements UserService {
             userEntity = userConverter.requestToEntity(request);
             userRepository.save(userEntity);
 
-        }else {
+        } else {
             throw new RuntimeException("Phone Number Already Exist");
         }
 
@@ -91,7 +90,7 @@ public class UserServiceImpl implements UserService {
     public UserDTO userLogin(UserLoginRequest request) {
         try {
             UserEntity userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.USER.name());
-            if(userEntity!=null){
+            if (userEntity != null) {
                 boolean matches = passwordEncoder.matches(request.getPassword(), userEntity.getPassword());
                 if (matches) {
                     // login success
@@ -105,7 +104,7 @@ public class UserServiceImpl implements UserService {
                     userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.USER.name());
                     LoginSessionEntity loginSession = loginSessionConverter.dtoToEntity(new LoginSessionDTO(), userEntity);
                     loginSessionRepository.save(loginSession);
-                    return userConverter.entityToDto(userEntity,token);
+                    return userConverter.entityToDto(userEntity, token);
                 } else {
                     // login failed
                     throw new RuntimeException("Invalid Credentials");
@@ -121,14 +120,12 @@ public class UserServiceImpl implements UserService {
     }
 
 
-
-
     @PreAuthorize("hasRole('USER')")
     @Override
     public UserDTO userProfile() {
         UserDetail user = AuthUtil.getCurrentUser();
         if (user == null) throw new UsernameNotFoundException("User Not Found");
-        UserEntity userEntity = userRepository.findByMobileNumberAndRole(user.getPhoneNumber(),Role.USER.name());
+        UserEntity userEntity = userRepository.findByMobileNumberAndRole(user.getPhoneNumber(), Role.USER.name());
         return userConverter.userEntityToDto(userEntity);
     }
 
@@ -141,10 +138,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void adminRegister(UserRegisterRequest request, SignupType signupType) {
-        UserEntity userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(),Role.ADMIN.name());
+    public UserDetail validateToken() {
+        UserDetail user = AuthUtil.getCurrentUser();
+        if (user == null) throw new UsernameNotFoundException("User Not Found");
+        return user;
+    }
 
-        if(userEntity==null){
+    @Override
+    public void adminRegister(UserRegisterRequest request, SignupType signupType) {
+        UserEntity userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.ADMIN.name());
+
+        if (userEntity == null) {
             request.setRole(Role.ADMIN);
             String encodedPassword = passwordEncoder.encode(request.getPassword());
             request.setPassword(encodedPassword);
@@ -152,7 +156,7 @@ public class UserServiceImpl implements UserService {
             request.setSignupType(signupType);
             userEntity = userConverter.userEntityToAdminDto(request);
             userRepository.save(userEntity);
-        }else {
+        } else {
             throw new RuntimeException("Phone Number Already Exist");
         }
     }
@@ -161,11 +165,11 @@ public class UserServiceImpl implements UserService {
     public UserDTO adminLogin(UserLoginRequest request) {
         try {
             UserEntity userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.ADMIN.name());
-            if(userEntity!=null){
+            if (userEntity != null) {
                 boolean matches = passwordEncoder.matches(request.getPassword(), userEntity.getPassword());
                 if (matches) {
                     // login success
-                    UserDetail userDetails =userConverter.entityToUserDetail(userEntity);
+                    UserDetail userDetails = userConverter.entityToUserDetail(userEntity);
                     final Authentication authentication =
                             authenticationManager.authenticate(
                                     new UsernamePasswordAuthenticationToken(userEntity.getId(), request.getPassword())
@@ -176,7 +180,7 @@ public class UserServiceImpl implements UserService {
                     userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.ADMIN.name());
                     LoginSessionEntity loginSession = loginSessionConverter.dtoToEntity(new LoginSessionDTO(), userEntity);
                     loginSessionRepository.save(loginSession);
-                    return userConverter.entityToDto(userEntity,token);
+                    return userConverter.entityToDto(userEntity, token);
                 } else {
                     // login failed
                     throw new RuntimeException("Invalid Credentials");
