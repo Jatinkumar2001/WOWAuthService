@@ -145,6 +145,21 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserDTO userProfileUpdate(UserRegisterRequest body) {
+        UserDetail user = AuthUtil.getCurrentUser();
+        if (user == null) throw new UsernameNotFoundException("User Not Found");
+        UserEntity userEntity = userRepository.findByMobileNumberAndRole(user.getPhoneNumber(), Role.USER.name());
+        userEntity.setDateOfBirth(body.getDateOfBirth());
+        userEntity.setEmail(body.getEmail());
+        userEntity.setFirstName(body.getFirstName());
+        userEntity.setLastName(body.getLastName());
+        userEntity.setFirstName(body.getFirstName());
+        userEntity.setGender(body.getGender().toString());
+        userEntity.setPhone(body.getPhone());
+        return userConverter.userEntityToDto(userEntity);
+    }
+
+    @Override
     public void adminRegister(UserRegisterRequest request, SignupType signupType) {
         UserEntity userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.ADMIN.name());
 

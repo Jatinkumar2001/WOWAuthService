@@ -91,6 +91,28 @@ public class AuthController {
     }
 
 
+    @PutMapping("user/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody UserRegisterRequest body) {
+
+        ResponseHandler responseHandler = new ResponseHandler();
+        try {
+            UserDTO response = userService.userProfileUpdate(body);
+            responseHandler.setData(response);
+            responseHandler.setMessage("Successfully Retrieved");
+            return new ResponseEntity<>(responseHandler, HttpStatus.OK);
+
+        }catch (BadCredentialsException e){
+            e.printStackTrace();
+            responseHandler.setStatus(HttpStatus.FORBIDDEN.value());
+            responseHandler.setMessage(e.getMessage());
+        } catch (Exception e){
+            e.printStackTrace();
+            responseHandler.setMessage(e.getMessage());
+        }
+        return new ResponseEntity<>(responseHandler, HttpStatus.OK);
+    }
+
+
     @PostMapping("admin/login")
     public ResponseEntity<?> adminLogin(@RequestBody UserLoginRequest request) {
 

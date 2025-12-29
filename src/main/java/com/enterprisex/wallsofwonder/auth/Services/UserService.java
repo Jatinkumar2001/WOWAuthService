@@ -19,4 +19,6 @@ public interface UserService {
     void adminRegister(UserRegisterRequest request, SignupType signupType);
     List<UserDTO> getAllUsers();
     UserDetail validateToken();
+
+    UserDTO userProfileUpdate(UserRegisterRequest body);
 }
