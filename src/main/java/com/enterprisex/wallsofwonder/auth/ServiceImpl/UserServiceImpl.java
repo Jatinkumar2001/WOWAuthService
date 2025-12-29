@@ -156,7 +156,7 @@ public class UserServiceImpl implements UserService {
         userEntity.setFirstName(body.getFirstName());
         userEntity.setGender(body.getGender().toString());
         userEntity.setPhone(body.getPhone());
-        return userConverter.userEntityToDto(userEntity);
+        return userConverter.userEntityToDto(userRepository.save(userEntity));
     }
 
     @Override
