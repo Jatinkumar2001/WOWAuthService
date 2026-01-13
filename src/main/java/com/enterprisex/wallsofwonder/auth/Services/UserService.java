@@ -21,4 +21,8 @@ public interface UserService {
     UserDetail validateToken();
 
     UserDTO userProfileUpdate(UserRegisterRequest body);
+
+    void sendOtp(UserLoginRequest request);
+
+    boolean verifyOtp(UserLoginRequest request);
 }

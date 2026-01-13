@@ -15,6 +15,7 @@ import com.enterprisex.wallsofwonder.auth.Enums.SignupType;
 import com.enterprisex.wallsofwonder.auth.Repository.LoginSessionRepository;
 import com.enterprisex.wallsofwonder.auth.Repository.UserRepository;
 import com.enterprisex.wallsofwonder.auth.Security.JwtUtil;
+import com.enterprisex.wallsofwonder.auth.Services.OTPService;
 import com.enterprisex.wallsofwonder.auth.Services.UserService;
 import com.enterprisex.wallsofwonder.auth.Util.AuthUtil;
 import jakarta.transaction.Transactional;
@@ -64,6 +65,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private LoginSessionConverter loginSessionConverter;
 
+    @Autowired
+    private OTPService otpService;
 
     @Transactional
     @Override
@@ -72,8 +75,8 @@ public class UserServiceImpl implements UserService {
         UserEntity userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.USER.name());
         if (userEntity == null) {
             request.setRole(Role.USER);
-            String encodedPassword = passwordEncoder.encode(request.getPassword());
-            request.setPassword(encodedPassword);
+//            String encodedPassword = passwordEncoder.encode(request.getPassword());
+//            request.setPassword(encodedPassword);
             request.setSignupType(signType);
 //            LoginSessionDTO loginSessionDto = new LoginSessionDTO();
 //            loginSessionDto.setVerificationOtp(otp);
@@ -91,27 +94,36 @@ public class UserServiceImpl implements UserService {
         try {
             UserEntity userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.USER.name());
             if (userEntity != null) {
-                boolean matches = passwordEncoder.matches(request.getPassword(), userEntity.getPassword());
-                if (matches) {
+                LoginSessionEntity loginSession = loginSessionRepository.findByUserId(userEntity.getId());
+                if (!request.getOtp().equals(loginSession.getVerificationOtp()))
+                    // login failed
+                    throw new RuntimeException("Invalid Otp");
+
+                // ✅ OTP verified → LOGIN SUCCESS
+                UserDetail userDetail = userConverter.entityToUserDetail(userEntity);
                     // login success
-                    final Authentication authentication =
-                            authenticationManager.authenticate(
-                                    new UsernamePasswordAuthenticationToken(userEntity.getId(), request.getPassword())
+                    // Optional: Set authentication manually
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetail,
+                                    null,
+                                    userDetail.getAuthorities()
                             );
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+
+                    SecurityContextHolder.getContext().setAuthentication(auth);
 //                    final UserEntity user = userDetailsService.loadUserByUsername(String.valueOf(request.getPhone()));
                     String token = jwtUtil.generateToken(userConverter.entityToUserDetail(userEntity));
                     userEntity = userRepository.findByMobileNumberAndRole(request.getPhone(), Role.USER.name());
-                    LoginSessionEntity loginSession = loginSessionConverter.dtoToEntity(new LoginSessionDTO(), userEntity);
+                    loginSession.setLoginType(userEntity.getSignupType());
+                    loginSession.setAuthToken(token);
+                    loginSession.setSuccessful(true);
+//                    loginSession.setSessionExpiry();
+                    loginSession = loginSessionConverter.dtoToEntity(new LoginSessionDTO(), userEntity);
                     loginSessionRepository.save(loginSession);
                     return userConverter.entityToDto(userEntity, token);
-                } else {
-                    // login failed
-                    throw new RuntimeException("Invalid Credentials");
                 }
-            }
 
-            throw new RuntimeException("Invalid Credentials");
+            throw new RuntimeException("Invalid Otp");
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
@@ -157,6 +169,33 @@ public class UserServiceImpl implements UserService {
         userEntity.setGender(body.getGender().toString());
         userEntity.setPhone(body.getPhone());
         return userConverter.userEntityToDto(userRepository.save(userEntity));
+    }
+
+    @Override
+    public void sendOtp(UserLoginRequest request) {
+        String otp = otpService.generateOtp(request.getPhone());
+        UserEntity userEntity = userRepository.findByMobileNumber(request.getPhone());
+        LoginSessionEntity loginSession = new LoginSessionEntity();
+        loginSession.setUserId(userEntity.getId());
+        loginSession.setLoginType(userEntity.getSignupType());
+        loginSession.setSuccessful(false);
+        loginSession.setVerificationOtp("123456");
+        loginSessionRepository.save(loginSession);
+
+    }
+
+    @Transactional
+    @Override
+    public boolean verifyOtp(UserLoginRequest request) {
+        UserEntity userEntity = userRepository.findByMobileNumber(request.getPhone());
+        LoginSessionEntity loginSession = loginSessionRepository.findByUserId(userEntity.getId());
+        if(loginSession.getVerificationOtp().equals(request.getOtp())){
+            userEntity.setProfileStatus(ProfileStatus.COMPLETED.toString());
+            userRepository.save(userEntity);
+            loginSession.setSuccessful(true);
+            loginSessionRepository.save(loginSession);
+        }
+        return loginSession.getVerificationOtp().equals(request.getOtp());
     }
 
     @Override

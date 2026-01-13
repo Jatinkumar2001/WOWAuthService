@@ -17,7 +17,8 @@ public interface UserRepository extends JpaRepository<UserEntity,Long> {
 
     @Query(value="select * from usrmgmt.users u where u.phone = ?1  and u.role = ?2 and profile_status = 'COMPLETED'  ",nativeQuery = true)
     UserEntity findByMobileNumberAndRole(String phone, String name);
-
+    @Query(value="select * from usrmgmt.users u where u.phone = ?1  and u.role = 'USER'",nativeQuery = true)
+    UserEntity findByMobileNumber(String phone);
     @Query(value="select * from usrmgmt.users u where  u.role = ?1",nativeQuery = true)
     List<UserEntity> getAllVendorsAndUsers(String role);
 }

@@ -44,6 +44,8 @@ public class SecurityConfig {
                         auth.requestMatchers(HttpMethod.POST,"/user/register").permitAll()
                                 .requestMatchers(HttpMethod.POST,"/user/login").permitAll()
                                 .requestMatchers(HttpMethod.POST,"/admin/login").permitAll()
+                                .requestMatchers(HttpMethod.POST,"/user/sendOtp").permitAll()
+                                .requestMatchers(HttpMethod.POST,"/user/verifyOtp").permitAll()
                                 .requestMatchers(HttpMethod.POST,"/admin/register").permitAll()
                                 .requestMatchers("/actuator/**").permitAll()
                                 .requestMatchers("/api/test/**").permitAll()

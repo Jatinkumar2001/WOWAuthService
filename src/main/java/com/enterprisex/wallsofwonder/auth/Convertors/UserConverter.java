@@ -5,6 +5,7 @@ import com.enterprisex.wallsofwonder.auth.DTO.UserDTO;
 import com.enterprisex.wallsofwonder.auth.Entities.UserDetailEntity;
 import com.enterprisex.wallsofwonder.auth.Entities.UserEntity;
 import com.enterprisex.wallsofwonder.auth.Enums.Gender;
+import com.enterprisex.wallsofwonder.auth.Enums.ProfileStatus;
 import com.enterprisex.wallsofwonder.auth.Enums.SignupType;
 import com.enterprisex.wallsofwonder.auth.ServiceImpl.UserDetail;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,6 +95,7 @@ public class UserConverter {
         entity.setDateOfBirth(request.getDateOfBirth());
         entity.setRole(request.getRole().name());
         entity.setPassword(request.getPassword());
+        entity.setProfileStatus(ProfileStatus.PENDING.toString());
 //        if(request.getAddresses()!=null)
 //            entity.setAddresses(addressConvertor.entityToDto(request.getAddresses(),entity));
 

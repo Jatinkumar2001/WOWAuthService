@@ -14,7 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class AuthController {
@@ -48,6 +50,52 @@ public class AuthController {
     }
 
 
+    @PostMapping("user/sendOtp")
+    public ResponseEntity<?> sendOtp(@RequestBody UserLoginRequest request){
+
+        ResponseHandler responseHandler = new ResponseHandler();
+        try {
+            String otp = otpService.generateOtp(request.getPhone());
+            userService.sendOtp(request);
+            responseHandler.setMessage("Otp send Successfully");
+            return new ResponseEntity<>(responseHandler, HttpStatus.OK);
+
+        }catch (BadCredentialsException e){
+            e.printStackTrace();
+            responseHandler.setStatus(HttpStatus.FORBIDDEN.value());
+            responseHandler.setMessage(e.getMessage());
+        } catch (Exception e){
+            e.printStackTrace();
+            responseHandler.setMessage(e.getMessage());
+        }
+        return new ResponseEntity<>(responseHandler, HttpStatus.OK);
+    }
+    @PostMapping("user/verifyOtp")
+    public ResponseEntity<?> verifyOtp(@RequestBody UserLoginRequest request){
+
+        ResponseHandler responseHandler = new ResponseHandler();
+        try {
+            boolean isValid = userService.verifyOtp(request);
+            if(isValid){
+                responseHandler.setIsSuccess(true);
+                responseHandler.setMessage("Validate Successfully");
+            }else {
+                responseHandler.setIsSuccess(false);
+                responseHandler.setMessage("Invalid Otp");
+            }
+
+            return new ResponseEntity<>(responseHandler, HttpStatus.OK);
+
+        }catch (BadCredentialsException e){
+            e.printStackTrace();
+            responseHandler.setStatus(HttpStatus.FORBIDDEN.value());
+            responseHandler.setMessage(e.getMessage());
+        } catch (Exception e){
+            e.printStackTrace();
+            responseHandler.setMessage(e.getMessage());
+        }
+        return new ResponseEntity<>(responseHandler, HttpStatus.OK);
+    }
     @PostMapping("user/login")
     public ResponseEntity<?> userLogin(@RequestBody UserLoginRequest request) {
 
